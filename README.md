@@ -1,12 +1,32 @@
 # TikTok Link Inspector
 
-A small MCP server for inspecting public TikTok link metadata.
+A small **Streamable HTTP MCP server** plus a separate web page for inspecting public TikTok link metadata.
 
-## Current scope
+## Project structure
 
-The `inspect_tiktok_link` tool validates a TikTok HTTPS link and requests its public metadata through TikTok's oEmbed endpoint. It can return the title, creator, thumbnail information, and embed HTML when available.
+- `server.py` — MCP server and web application.
+- `/mcp` — Streamable HTTP MCP endpoint.
+- `/` — separate browser page with the TikTok link form and official embedded player.
+- `/api/inspect` — web page's metadata endpoint.
+- `skills/tiktok-reaction/SKILL.md` — Agent Skill instructions for how an assistant should handle TikTok links and react to analyzed videos.
 
-**It does not watch, download, transcribe, or analyze the video/audio.** TikTok may not expose metadata for private, unavailable, region-restricted, or unsupported videos.
+## MCP tool currently available
+
+### `inspect_tiktok_link(url)`
+
+Validates a TikTok HTTPS URL and requests public metadata from TikTok's oEmbed endpoint. When available, it returns the title, creator, profile URL, thumbnail URL, and embed HTML.
+
+**Important:** this tool does not watch, download, transcribe, or analyze the video/audio. An embedded player is only a player; it does not expose the media stream to this server.
+
+## Skill
+
+The Agent Skill in `skills/tiktok-reaction/SKILL.md` describes the assistant workflow:
+1. Prefer an available short-form video analysis provider for the actual video.
+2. Use this MCP server as a metadata fallback.
+3. Never claim to have watched or analyzed a video when only metadata was retrieved.
+4. Give the user a concise, natural reaction in their language when actual analysis is available.
+
+A Skill file is guidance for a compatible assistant/agent. Committing it to GitHub does **not** automatically install it into ChatGPT or connect this MCP server to a ChatGPT account. Those are separate setup steps.
 
 ## Run locally
 
@@ -17,19 +37,24 @@ pip install -r requirements.txt
 python server.py
 ```
 
-The MCP server uses Streamable HTTP. By default it listens on port 8000 and exposes the MCP endpoint at `/mcp`.
+The server listens on port 8000 by default and exposes the MCP endpoint at `/mcp`.
 
 ## Deploy to Render
 
-1. Create a new **Web Service** from this GitHub repository.
-2. Choose the Docker runtime (Render can detect the included Dockerfile).
-3. Choose the Free plan if available for your account and region.
-4. Deploy. The service listens on Render's `PORT` environment variable.
+The included Dockerfile and `render.yaml` define the existing web service. The site and MCP endpoint run in the same process, so keep both routes when changing the app.
 
 ## Connect an MCP client
 
-Use the deployed service's base URL with the `/mcp` path, for example:
+Use the deployed service's MCP URL:
 
-`https://YOUR-SERVICE.onrender.com/mcp`
+```
+https://YOUR-SERVICE.onrender.com/mcp
+```
 
-Do not add secrets to this repository. This first version has no authentication layer, so treat the public endpoint as a prototype and do not expose it to untrusted traffic without adding access controls and rate limiting.
+The service currently has no authentication layer or rate limiting. Treat the public endpoint as a prototype; add access controls and rate limiting before exposing it to untrusted traffic. Do not commit secrets or API keys.
+
+## Roadmap
+
+- Add an authorized video-analysis provider behind a separate MCP tool.
+- Keep metadata inspection separate from actual video analysis.
+- Add tests for URL validation and provider error handling.
