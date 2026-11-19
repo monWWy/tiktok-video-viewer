@@ -78,6 +78,19 @@ async def inspect_tiktok_link(url: str) -> dict:
     return await get_tiktok_metadata(url)
 
 
+@mcp.tool()
+async def server_status() -> dict:
+    """Check that the TikTok Link Inspector MCP service is running and report its current capabilities."""
+    return {
+        "ok": True,
+        "service": "TikTok Link Inspector",
+        "mcp_endpoint": "/mcp",
+        "website": "/",
+        "capabilities": ["public_oembed_metadata", "official_embed_player"],
+        "video_audio_analysis": False,
+    }
+
+
 PAGE = """<!doctype html>
 <html lang="ru">
 <head>
@@ -148,6 +161,16 @@ async def homepage(request):
     return HTMLResponse(PAGE)
 
 
+async def health_api(request):
+    return JSONResponse({
+        "ok": True,
+        "service": "TikTok Link Inspector",
+        "mcp_endpoint": "/mcp",
+        "website": "/",
+        "video_audio_analysis": False,
+    })
+
+
 async def inspect_api(request):
     try:
         body = await request.json()
@@ -163,7 +186,8 @@ async def inspect_api(request):
 
 app = mcp.streamable_http_app()
 app.routes.insert(0, Route("/", homepage, methods=["GET"]))
-app.routes.insert(1, Route("/api/inspect", inspect_api, methods=["POST"]))
+app.routes.insert(1, Route("/health", health_api, methods=["GET"]))
+app.routes.insert(2, Route("/api/inspect", inspect_api, methods=["POST"]))
 
 
 if __name__ == "__main__":
