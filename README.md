@@ -6,11 +6,16 @@ A small **Streamable HTTP MCP server** plus a separate web page for inspecting p
 
 - `server.py` — MCP server and web application.
 - `/mcp` — Streamable HTTP MCP endpoint.
+- `/health` — simple HTTP health check for deployment verification.
 - `/` — separate browser page with the TikTok link form and official embedded player.
 - `/api/inspect` — web page's metadata endpoint.
 - `skills/tiktok-reaction/SKILL.md` — Agent Skill instructions for how an assistant should handle TikTok links and react to analyzed videos.
 
 ## MCP tool currently available
+
+### `server_status()`
+
+Returns the service status and clearly reports that actual video/audio analysis is not implemented yet.
 
 ### `inspect_tiktok_link(url)`
 
