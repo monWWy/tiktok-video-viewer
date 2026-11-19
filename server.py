@@ -67,7 +67,8 @@ async def get_tiktok_metadata(url: str) -> dict:
         "author_name": data.get("author_name"),
         "author_url": data.get("author_url"),
         "thumbnail_url": data.get("thumbnail_url"),
-        "note": "Получены только публичные метаданные. Само видео и звук ещё не анализируются.",
+        "embed_html": data.get("html"),
+        "note": "Видео показано через официальный плеер TikTok. Сервер не получает видеопоток и не анализирует звук или кадры.",
     }
 
 
@@ -121,7 +122,19 @@ form.addEventListener('submit',async e=>{
   else{
    panel.append(field('Автор',data.author_name),field('Название',data.title));
    if(data.author_url){const a=document.createElement('a');a.href=data.author_url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Открыть профиль автора';panel.append(a)}
-   if(data.thumbnail_url){const img=document.createElement('img');img.className='thumb';img.src=data.thumbnail_url;img.alt='Превью ролика';panel.append(img)}
+   if(data.embed_html){
+    const match=data.embed_html.match(/src=["']([^"']+)["']/i);
+    if(match){try{
+     const playerUrl=new URL(match[1]);
+     if(playerUrl.protocol==="https:"&&playerUrl.hostname==="www.tiktok.com"&&playerUrl.pathname.startsWith("/player/v1/")){
+      const frame=document.createElement("iframe");frame.src=playerUrl.href;frame.title="TikTok video player";
+      frame.allow="autoplay; encrypted-media; picture-in-picture; fullscreen";frame.allowFullscreen=true;frame.loading="lazy";
+      frame.style.cssText="display:block;width:100%;aspect-ratio:9/16;max-height:620px;border:0;border-radius:12px;margin-top:16px";
+      panel.append(frame);
+     }
+    }catch(_){}}
+   }
+   if(data.thumbnail_url&&!data.embed_html){const img=document.createElement('img');img.className='thumb';img.src=data.thumbnail_url;img.alt='Превью ролика';panel.append(img)}
    const note=document.createElement('p');note.textContent=data.note;panel.append(note);
   }
   result.replaceChildren(panel);
